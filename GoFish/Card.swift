@@ -7,22 +7,25 @@
 import SwiftUI
 //import Foundation
 
-enum Rank{
-    case One, Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Queen, King
-}
-
-enum Suit {
+//enum Rank{
+//    case One, Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Queen, King
+//}
+//
+//enum Suit {
+//    case One, Two, Three, Four
+//}
+enum Rank: CaseIterable{
     case One, Two, Three, Four
 }
-struct Card: Identifiable{
-    
-    var id = UUID()
-let suit: Suit
-let rank: Rank
+enum Suit: CaseIterable{
+    case One, Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Queen, King, Joker
+}
+
+struct Card{
+  var rank: Rank
+    var suit: Suit
 let flipped: Bool
 let used: Bool
-    var fileName: String{
-        return "\(suit)-\(rank)"
-    }
-}
+    
+ }
 let cards = [Card]()
