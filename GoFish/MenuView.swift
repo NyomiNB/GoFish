@@ -17,7 +17,7 @@ struct MenuView: View {
             Button(action: {
                 print("play")
             }, label: {
-                NavigationLink(destination: GameView()) {
+                NavigationLink(destination: GameView(cards: testData, players: playerTest)) {
                     Text("Play").foregroundColor(.white)
                 }
                 .padding()

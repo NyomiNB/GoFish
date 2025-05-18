@@ -18,11 +18,13 @@ enum Rank: CaseIterable{
     case One, Two, Three, Four
 }
 enum Suit: CaseIterable{
-    case One, Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Queen, King, Joker
+    case One, Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Queen, Joker
 }
-struct Player: Identifiable{
-    var cards: [Card] = []
-    var id = UUID()
+struct Player{
+    var cards:[Card] = testData
+
+//    var cards: [Card] = []
+//    var id = UUID()
     var isMe: Bool = false
 }
 
@@ -49,7 +51,8 @@ struct GoFish{
     //init hand
     
 }
-struct Card{
+struct Card: Identifiable{
+    var id = UUID()
     var rank: Rank
     var suit: Suit
     //let selected: Bool
@@ -57,7 +60,7 @@ struct Card{
     var filename: String{
         get {
             if flipped{
-                return "\(suit) \(rank)"
+                return "\(rank) \(suit)"
             } else{
                 return "back"
             }
@@ -67,6 +70,21 @@ struct Card{
  
 
  
+var testData = [
+    Card (rank: .Four, suit: .One),
+    Card (rank: .Two, suit: .One),
+    Card (rank: .Three, suit: .One),
+    Card (rank: .Four, suit: .Queen),
+    Card (rank: .Four, suit: .Four),
+    Card (rank: .One, suit: .Four),
+    Card (rank: .Four, suit: .Joker)
+
+]
+var playerTest = [
+Player(),
+Player(cards: testData, isMe:true)
+
+]
 
 struct Deck{
     @State var cards: [Card] = []
