@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct MenuView: View {
+    let game = GoFishGame()
     var body: some View {
          NavigationStack{
              Text("Go Fish!")
@@ -17,7 +18,7 @@ struct MenuView: View {
             Button(action: {
                 print("play")
             }, label: {
-                NavigationLink(destination: GameView(cards: testData, players: playerTest)) {
+                NavigationLink(destination: GameView(viewModel: game, playerTurn: true)) {
                     Text("Play").foregroundColor(.white)
                 }
                 .padding()

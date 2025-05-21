@@ -14,11 +14,13 @@ struct InstructionsView: View {
             .font(.largeTitle)
         Text("Goal")
             .bold()
-        Text("Get cards with the same number in order to create 'books'")
-        Text("You can get new cards by fishing or asking players for a card to complete your book")
-        Text("The player with the most books when the deck runs out wins")
+        Text("How To Play")
+        Text("The player with the most books when the deck runs out, or a player runs out of cards, wins")
 
-    }
+        Text("Get four cards with the same number in order to create 'books'")
+        Text("You can get new cards by 'fishing', or asking players for a card to complete your book")
+        Text("The player with the most books when the deck runs out, or a player runs out of cards, wins")
+     }
 }
 
 #Preview {

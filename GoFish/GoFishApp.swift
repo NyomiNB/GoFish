@@ -13,7 +13,7 @@ struct GoFishApp: App {
 
     var body: some Scene {
         WindowGroup {
-let deck = Deck()
+let game = GoFishGame()
             MenuView()
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
         }
