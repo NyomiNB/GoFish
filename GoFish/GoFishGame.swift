@@ -15,7 +15,7 @@ class GoFishGame: ObservableObject {
         let playerName: String
       @Published var cards: [Card] = []
          var id = UUID()
-         var books = 0
+         @Published var books: [String] = []
 
         var isMe: Bool = false
         init(name: String, cards: [Card] = [], isMe: Bool) {
@@ -60,7 +60,7 @@ class GoFishGame: ObservableObject {
    }
     var selectedCards: [Card] = []
 
-    private var deck: [Card] = []
+    var deck: [Card] = []
     init(){
         createDeck()
         dealHands()
@@ -104,17 +104,18 @@ class GoFishGame: ObservableObject {
             players[playerIndex].cards.append(card)
         
     }
-    func gotAny(from requestingIndex: Int, to targetIndex: Int, suit: Suit) -> Bool {
-        let targetPlayer = players[targetIndex]
+    func gotAny(from requestingIndex: Int, to targetIndex: Int, suit: Suit) -> (success: Bool, matching: Int) {
+         let targetPlayer = players[targetIndex]
         let requestingPlayer = players[requestingIndex]
         let takenCards = removeCards(of: suit, of: targetPlayer)
-        
+        var success = false
+ 
         if !takenCards.isEmpty{
             players[requestingIndex].cards.append(contentsOf: takenCards)
-            return true
+            return (true, takenCards.count)
         } else{
             playerDraws(playerIndex: requestingIndex)
-            return false
+            return (false, takenCards.count)
         }
     }
     func removeCards(of suit: Suit, of player: Player) -> [Card]{
