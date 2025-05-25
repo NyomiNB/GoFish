@@ -18,7 +18,7 @@ struct MenuView: View {
             Button(action: {
                 print("play")
             }, label: {
-                NavigationLink(destination: GameView(viewModel: game, playerTurn: true)) {
+                NavigationLink(destination: GameView(viewModel: game, continueGame: true, playerTurn: true)) {
                     Text("Play").foregroundColor(.white)
                 }
                 .padding()

@@ -123,6 +123,20 @@ class GoFishGame: ObservableObject {
         player.cards.removeAll { $0.suit == suit }
         return matching
     }
+    func evaluateComputerHand(in hand: [Card])-> [String]{
+        var suitCount : [Suit: Int] = [:]
+        var results: [String] = []
+        for card in hand {
+            suitCount [card.suit, default: 0] += 1
+            
+        }
+        for (suit, count) in suitCount {
+            if count == 4 {
+                results.append(suit.name)
+            }
+        }
+       return results
+    }
     func evaluateHand(of player: Player)-> Hand{
         var returnType = Hand.None
         let hand = player.cards.filter { $0.selected == true }
