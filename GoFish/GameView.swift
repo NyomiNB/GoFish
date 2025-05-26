@@ -4,20 +4,28 @@
 //
 //  Created by Nyomi Bell on 5/5/25.
 //
-
 import SwiftUI
+import AVKit
+
+ class SoundManager {
+    static let instance = SoundManager()
+    var player: AVAudioPlayer?
+    
+    func shuffleSound(){
+        guard let url = Bundle.main.url(forResource: "CardDeal", withExtension: ".wav") else { return }
+        
+        do{
+            player = try AVAudioPlayer(contentsOf: url)
+            player?.play()
+        } catch let error {
+            print("Error plaing osund. \(error.localizedDescription)")
+        }
+    }
+}
 struct GameView: View {
     @ObservedObject var viewModel: GoFishGame
     @State var continueGame: Bool
-    //Card Model
-    //Player Deck Array of Strings
-    //Computer Deck Array of Strings
-    //Shuffle Class
-    //Class keeps track of what cards can be asked for
-    //  @State var cards: [Card]
     @State var chosenCard = "..."
-    
-    //let vowels: [Character] = ["a", "e", "i", "o","u"]
     @State var playerTurn: Bool
     @State var selectedSuit: GoFishGame.Suit? = nil
     @State var message = ""
@@ -30,246 +38,284 @@ struct GameView: View {
     @State var failed: Bool = false
     
     @Environment(\.verticalSizeClass) var verticalSizeClass
-    // @State var players: [Player]
-    //    @State var cards:[Card]
     var body: some View {
-        if continueGame{
-            
-            Text(turn)
-            Text(computerAction)
-            
-            Text("Computer Books \(viewModel.players[0].books)")
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: -75)]){
-                ForEach(viewModel.players[0].cards){card in
-                    CardView(cardName: "back")
-                }
+        Group {
+                 if continueGame{
+                mainGameView()
+            } else {
+                gameOverView()
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .animation(.bouncy(), value: continueGame)
             }
-            .frame(maxHeight: 100)
-            .scrollTargetBehavior(.viewAligned)
-            
-            //                     Image("background").ignoresSafeArea()
-            var hand = viewModel.evaluateHand(of: viewModel.players[1])
-            var handStr = "\(hand)"
-            Text(handStr)
-            Text(message)
-            Text(yourAction)
-            
-                .font(.title)
-            Text("Your Books: \(viewModel.players[1].books.count)")
-            Text("\(viewModel.players[1].books)")
-            
-            ScrollView(.horizontal){
-                HStack{
-                    ForEach($viewModel.players[1].cards){$card in
-                        CardView(cardName: card.filename)
-                            .containerRelativeFrame(.horizontal, count: verticalSizeClass == .regular ? 2:4, spacing: 5)
-                        
-                            .onTapGesture{
-                                if playerTurn{
-                                    card.selected.toggle()
-                                    //                                viewModel.select(card, in: viewModel.players[0])
-                                    chosenCard = card.suit.name
-                                    selectedSuit = card.suit
-                                    checkButtons(handStr: handStr)
-                                    
-                                }
-                                
-                                
-                            }
-                            .offset(y: card.selected ? -30 : 0)
-                        
-                    }
-                }
-                .scrollTargetLayout()
-                
-                
-                //                    LazyVGrid(columns: [.init(.flexible(minimum:50), spacing: 10)]){
-                //                        HStack{
-                //                            ForEach(players[0].cards){card in
-                //                                CardView(cardName: card.filename)
-                //                            }
-                //                        }
-                //
-                //                    }
-            }
-            .contentMargins(50, for: .scrollContent)
-            .scrollTargetBehavior(.viewAligned)
-            
-            
-            //                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 100, maximum: 100), spacing: -67)]){
-            //                            ForEach(players[0].cards){card in
-            //                                CardView(cardName: card.filename)
-            //                            }
-            //
-            //                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 100, maximum: 100), spacing: -76)]){
-            //                            ForEach(player[0].cards){card in
-            //                                CardView(cardName: card.fileName)
-            //                            }
-            //                        }
-            //                        .frame(width: 500)
-            //                        .scaleEffect(0.75)
-            
-            //   }
-            
-            //   }
-            //}
-            .onAppear(){
-                checkButtons(handStr: handStr)
-                print(viewModel.players[1].cards.count)
-                printTest()
-                let startingPlayer = viewModel.chooseStartingPlayer()
-                playerTurn = startingPlayer.playerName == "User"
-                if playerTurn{
-                    turn = "Your turn"
-                    
-                } else{
-                    turn = "Computer turn"
-                    
-                }
-                print(startingPlayer.playerName)
-                
-                //            if viewModel.chooseStartingPlayer().playerName == "User"{
-                //               print(viewModel.chooseStartingPlayer().playerName)
-                //                playerTurn = true
-                ////
-                //            } else {
-                //                playerTurn = false
-                //            }
-                //            print("Player name is \(startPlayer().playerName)")
-                print(playerTurn) //            deckInit()
-                //            initializeHand()
-            }
-            VStack{
-                Button(action: {
-                    print("Go fish")
-                    goFish()
-                }, label: {
-                    Text("Go Fish")        })
-                .disabled(!playerTurn)
-                
-                HStack{
-                    //                Button(action: {
-                    //                    print("Dra Card")
-                    //                }, label: {
-                    //                    Text("Play Card")  })
-                    //                .disabled(playerTurn)
-                    
-                    Button(action: {
-                        print("Create book")
-                        createUserBook(isBook: handStr, bookType: chosenCard)
-                        viewModel.players[1].cards = viewModel.players[1].cards
-                        hand = viewModel.evaluateHand(of: viewModel.players[1])
-                        yourAction = "You just created a book of \(chosenCard)s!"
-                    }, label: {
-                        Text("Create Book")        })
-                    .disabled(disableBookButton)
-                    
-                    Button(action: {
-                        
-                        
-                        print("Ask")
-                        if chosenCard != "..." {
-                            var result = viewModel.gotAny(from: 1, to: 0, suit: (selectedSuit)!)
-                            
-                            if(result.success == true){
-                                if result.matching > 1 {
-                                    yourAction = "You took \(result.matching) \(chosenCard)s"
-                                    chosenCard = "..."
-                                } else {
-                                    yourAction = "You took \(result.matching) \(chosenCard)"
-                                    chosenCard = "..."
-                                    
-                                }
-                            } else {
-                                yourAction = "There weren't any \(chosenCard)s in your opponent's hand :( Go Fish!"
-                                chosenCard = "..."
-                                failed = true
-                            }
-                        } else {
-                            message = "Select the card in your hand you would like to ask for"
-                        }
-                    }, label: {
-                        Text("Ask for a \(chosenCard)")
-                    }
-                           //   .disabled()
-                    )
-                    .disabled(!playerTurn)
-                    .disabled(failed)
-                    
-                }
-            }
-            .onChange(of: handStr) {
-                checkButtons(handStr: handStr)
-            }
-            .onChange(of: playerTurn) {
-                failed = false
-                if gameOver(){
-                    continueGame = false
-                } else{
-                    continueGame = true
-                    
-                }
-                
-                checkButtons(handStr: handStr)
-                print("on change works!")
-                
-                if !playerTurn{
-                    print("Computer going")
-                    turn = "Comoputer Turn"
-                    
-                    computerTurn()
-                } else {
-                    turn = "Your turn"
-                    
-                    print("Computer not going")
-                    
-                }
-            }
-            
-        }else{
-            gameOverView()
         }
     }
     
-    //    struct computerView: View{
-    //        var body: some View{
-    //
-    //
-    //                }
-    //            }
-    //        }
-    //
-    //    }
-    
+    @ViewBuilder
+    func mainGameView() -> some View{
+        
+        if turn != ""{
+            Text(turn)
+                .foregroundColor(playerTurn ? .purple : .white)
+                .font(.largeTitle)
+        }
+        
+        Text("Computer Books \(viewModel.players[0].books)")
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: -75)]){
+            ForEach(viewModel.players[0].cards){card in
+                CardView(cardName: "back")
+            }
+        }
+        .frame(maxHeight: 100)
+        .scrollTargetBehavior(.viewAligned)
+//        VStack{
+//            Button {
+//                goFish()
+//            } label: {
+//                Image("back")
+//                    .resizable()
+//                    .frame(width: 200, height: 200)
+//            }
+//        }
+
+        //                     Image("background").ignoresSafeArea()
+        var hand = viewModel.evaluateHand(of: viewModel.players[1])
+        var handStr = "\(hand)"
+        //Text(handStr)
+        
+        
+        if yourAction != ""{
+            withAnimation(.easeIn(duration: 0.3)){
+                
+                Text(yourAction)
+                    .foregroundColor(.white)
+                    .font(.subheadline)
+            }
+        } else if computerAction != ""{
+            withAnimation(.easeIn(duration: 0.3)){
+                
+                Text(computerAction)
+                    .foregroundColor(.purple)
+                    .font(.subheadline)
+            }
+        }
+
+  if viewModel.dealing{
+      withAnimation(.easeIn(duration: 0.3)){
+          
+          Text(message)
+              .foregroundColor(.yellow)
+              .font(.title)
+      }
+        } else  if message != "" {
+            withAnimation(.easeIn(duration: 0.3)){
+                
+                Text(message)
+                    .foregroundColor(.red)
+            }
+        }
+ 
+
+        ScrollView(.horizontal){
+            HStack{
+                ForEach($viewModel.players[1].cards){$card in
+                    CardView(cardName: card.filename)
+                        .transition(.asymmetric(insertion: .move(edge: .bottom), removal: .opacity))
+                        .containerRelativeFrame(.horizontal, count: verticalSizeClass == .regular ? 2:4, spacing: 5)
+                        .background(card.selected ? Color.white : Color.clear)
+                        .cornerRadius(8)
+                        .onTapGesture{
+                            if playerTurn{
+                                SoundManager.instance.shuffleSound()
+                                card.selected.toggle()
+                                printTest()
+
+                                //                                viewModel.select(card, in: viewModel.players[0])
+                                chosenCard = card.suit.name
+                                selectedSuit = card.suit
+                                checkButtons(handStr: handStr)
+                                
+                            }
+                            
+                            
+                        }
+                        .offset(y: card.selected ? -30 : 0)
+                    
+                }
+            }
+            .scrollTargetLayout()
+ 
+         }
+        .contentMargins(50, for: .scrollContent)
+        .scrollTargetBehavior(.viewAligned)
+        buttons
+
+        .onAppear(){
+            checkButtons(handStr: handStr)
+            print(viewModel.players[1].cards.count)
+             let startingPlayer = viewModel.chooseStartingPlayer()
+                 viewModel.dealHands()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1){
+
+                playerTurn = startingPlayer.playerName == "User"
+                turn = (playerTurn ? "Your Turn" : "Compter Turn")
+             }
+        }
+        .onChange(of: viewModel.dealing) { dealing in
+            if !dealing && !playerTurn {
+                computerTurn()
+            }
+        }
+        
+        .onChange(of: handStr) {
+            checkButtons(handStr: handStr)
+        }
+        .onChange(of: playerTurn) {
+            failed = false
+            if gameOver(){
+                continueGame = false
+            } else{
+                continueGame = true
+                
+            }
+            
+            checkButtons(handStr: handStr)
+            print("on change works!")
+            
+             if !playerTurn{
+                print("Computer going")
+                turn = "Computer Turn"
+                
+                computerTurn()
+            } else {
+                turn = "Your turn"
+                
+                print("Computer not going")
+             }
+        }
+     }//end of gameView struct
+    //    private var controlButtons: some View {
+//    VStack(spacing: 12) {
+//        Button("Go Fish") {
+//            goFish()
+//        }
+//        .buttonStyle(StyledButton(color: .blue))
+//        .disabled(!playerTurn)
+//
+//        HStack(spacing: 10) {
+//            Button("Create Book") {
+//                createUserBook()
+//            }
+//            .buttonStyle(StyledButton(color: .green))
+//            .disabled(disableBookButton)
+//
+//            Button("Ask for a \(chosenCard)") {
+//                askForCard()
+//            }
+//            .buttonStyle(StyledButton(color: .purple))
+//            .disabled(!playerTurn || failed)
+//        }
+//    }
+//}
+
+    private var buttons: some View {
+        VStack(spacing: 3){
+            Button("Go Fish"){
+                goFish()
+            }
+            .buttonStyle(StyledButton(color: .cyan))
+            .disabled(!playerTurn || viewModel.dealing)
+            
+            
+            HStack(spacing: 7){
+                Button("Create book"){
+                    createUserBook()
+                }
+                .buttonStyle(StyledButton(color: .green))
+                .disabled(disableBookButton || viewModel.dealing)
+                
+                Button("Ask for a \(chosenCard)"){
+                    askForCard()
+                }
+                .buttonStyle(StyledButton(color: .blue))
+                .disabled(!playerTurn || failed || viewModel.dealing)
+                
+            }
+            Text("Your Books: \(viewModel.players[1].books.count)")
+            Text(viewModel.players[1].books.joined(separator: ", "))
+        }
+    }
     struct CardView: View{
         let cardName: String
         var body: some View{
             Image(cardName)
                 .resizable()
                 .scaledToFit()
-            //                .aspectRatio(2/3, contentMode: .fit)
-            
         }
     }
+    struct StyledButton: ButtonStyle {
+        var color: Color
+        func makeBody(configuration: Configuration) -> some View{
+            configuration.label
+                .background(color)
+                .frame(maxWidth: .infinity)
+                .cornerRadius(10)
+                .foregroundColor(.white)
+                .padding()
+                .shadow(radius: configuration.isPressed ? 0.95 : 1.0)
+                .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+        }
+    }
+    
     @ViewBuilder
-    func gameOverView() -> some View{
-        Text("Game Over")
-        var player = chooseWinner()
-        Text("The Winner is \(player)")
-        Button {
-            restart()
-        }label:{
-            Text("Play Again")
+        func gameOverView() -> some View{
+            Text("Game Over")
+            var player = chooseWinner()
+            Text("The Winner is \(player)")
+            Button {
+                restart()
+            }label:{
+                Text("Play Again")
+            }
+        }
+
+    
+    func askForCard(){
+        guard chosenCard != "..." && !viewModel.dealing else {
+            message = "Select the card in your hand you would like to ask for"
+            return
+        }
+        
+        if let selectedSuit{
+        
+            let result = viewModel.gotAny(from: 1, to: 0, suit: selectedSuit)
+            
+            if(result.success){
+                if result.matching > 1 {
+                    yourAction = "You took \(result.matching) \(chosenCard)\(result.matching > 1 ? "s" : "")!"
+                } else {
+                    yourAction = "No \(chosenCard)s found :( Go Fish!"
+                    failed = true
+                }
+                chosenCard = "..."
+                
+            }
         }
     }
+    
     func restart(){
-        viewModel.players[1].books.removeAll()
+        viewModel.dealingIndex = 0
+        viewModel.dealingToStartPlayer = true
+         viewModel.players[1].books.removeAll()
         viewModel.players[0].books.removeAll()
         chosenCard = "..."
         viewModel.players[1].cards.removeAll()
         viewModel.players[0].cards.removeAll()
         viewModel.createDeck()
+        let startingPlayer = viewModel.chooseStartingPlayer()
+
         viewModel.dealHands()
+
+ 
         playerTurn = false
         message = ""
         computerAction = ""
@@ -279,11 +325,10 @@ struct GameView: View {
         disableAsk = true
         disableBookButton = true
         continueGame = true
-        
     }
+    
     func goFish(){
-        
-        let card = viewModel.drawCard()
+         let card = viewModel.drawCard()
         print("card\(card)")
         viewModel.players[1].cards.append(card)
         viewModel.players[1].cards = viewModel.players[1].cards
@@ -298,22 +343,26 @@ struct GameView: View {
             yourAction = "You caught a \(card.suit.name)-Computer's turn!"
             
             playerTurn = !playerTurn
-            
         }
     }
-    func createUserBook(isBook: String, bookType: String){
-        print(isBook)
+    
+    func createUserBook(){
         var valid = false
-        if isBook == "Book" {
-            viewModel.players[1].books.append(bookType)
+        
+        var hand = viewModel.evaluateHand(of: viewModel.players[1])
+        var handStr = "\(hand)"
+ 
+        if handStr == "Book" {
+            //adds book to array of user books
+            viewModel.players[1].books.append(chosenCard)
+            //refreshes view
             viewModel.players[1].books = viewModel.players[1].books
+            yourAction = "You just created a book of \(chosenCard)s!"
             valid = true
-            
         }
         
-        //remove elements
+        //reset cards to !selected
         if valid {
-            
             print("working")
             viewModel.players[1].cards = viewModel.players[1].cards.filter{ !$0.selected }
             printTest()
@@ -322,39 +371,8 @@ struct GameView: View {
             }
             //refreshes view
             viewModel.players = viewModel.players
-            // playerTurn = !playerTurn
-            
-            //var count = 0
-            ////
-            //            viewModel.players[1].cards = viewModel.players[1].cards.filter { _ in
-            //                if viewModel.players[1].cards[count].selected {
-            //                    count += 1
-            //                    return false
-            //                } else {
-            //                    return true
-            //                }
-            //  }
-            //            var count = 0...viewModel.players[1].cards.count
-            //          print(count)
-            //            for number in count {
-            //
-            //                if viewModel.players[1].cards[number].selected{
-            //                    viewModel.players[1].cards.remove(at: number)
-            //                } else{
-            //                    print("element \(viewModel.players[1].cards[number]) not selected")
-            //                }
-            //
-            //            }
-            //            let newCount = 0...viewModel.players[1].cards.count
-            //
-            //            for number in newCount {
-            //
-            //                print("new array \(viewModel.players[1].cards[number]) ")
-            //            }
-            //        }
-            //        for element in viewModel.players[1].cards {
-            //            if viewModel.players[1].cards[element]
-        }
+         }
+        
     }
     func checkButtons(handStr: String){
         if !playerTurn || handStr != "Book"{
@@ -370,68 +388,75 @@ struct GameView: View {
         } else if playerTurn {
             disableGoFish = false
             disableAsk = false
-            
         }
-        
     }
-    //computerTurn
     
+    //computerTurn
     func computerTurn(){
+        guard !viewModel.dealing else {
+             return
+        }
+
         turn = "Computer's turn"
         //look through hand
-        while(!playerTurn){
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1){
+            
             let cardHand = viewModel.evaluateComputerHand(in: viewModel.players[0].cards)
             viewModel.players[0].books.append(contentsOf: cardHand)
-            //random decision to draw or go fish maybe make smart later
-            print("computer went")
-            var thing = viewModel.players[0].cards.randomElement()!.suit
-            print(thing)
-            printTest()
-            
-            let result = viewModel.gotAny(from: 0, to: 1, suit: thing)
-            
-            if(result.success == true){
-                viewModel.players[1].cards = viewModel.players[1].cards.filter{ !$0.selected }
-                if result.matching > 1 {
-                    computerAction = "Computer took \(result.matching) \(thing)s"
-                } else {
-                    computerAction = "Computer took \(result.matching) \(thing)"
-                    
-                }
-                
-            } else {
-                computerAction = "Aw, no \(result.matching) \(thing)s? :("
-                print("computer draws card")
-                let card = viewModel.drawCard()
-                viewModel.players[0].cards.append(card)
-                if thing.name == card.suit.name {
-                    computerAction = "Computer caught a \(card.suit.name)!"
-                    viewModel.players[0].cards = viewModel.players[0].cards
-                    
-                } else{
-                    computerAction = "Computer caught a \(card.suit.name)-Your Turn!"
-                    
-                    playerTurn = !playerTurn
-                    viewModel.players[0].cards = viewModel.players[0].cards
-                    
-                }
-                
-                
-            }
         }
         
-    }
+             print("computer went")
+        if viewModel.players[0].cards.isEmpty {
+            print("uh oh")
+gameOver()
+        }else {
+            var selectedSuit = viewModel.players[0].cards.randomElement()!.suit
+            print(selectedSuit)
+            printTest()
+            
+            let result = viewModel.gotAny(from: 0, to: 1, suit: selectedSuit)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2){
+                
+                if(result.success == true){
+                    viewModel.players[1].cards = viewModel.players[1].cards.filter{ !$0.selected }
+                    if result.matching > 1 {
+                        computerAction = "Computer took \(result.matching) \(selectedSuit)s"
+                    } else {
+                        computerAction = "Computer took \(result.matching) \(selectedSuit)"
+                        
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2){
+                        
+                        computerTurn()
+                    }
+                } else {
+                    computerAction = "Aw, no \(result.matching) \(selectedSuit)s? :("
+                    print("computer draws card")
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2){
+                        let card = viewModel.drawCard()
+                        viewModel.players[0].cards.append(card)
+                        
+                        if selectedSuit.name == card.suit.name {
+                            computerAction = "Computer caught a \(card.suit.name)!"
+                            viewModel.players[0].cards = viewModel.players[0].cards
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2){
+                                computerTurn()
+                            }
+                        } else{
+                            computerAction = "Computer caught a \(card.suit.name)-Your Turn!"
+                            
+                            playerTurn = !playerTurn
+                            viewModel.players[0].cards = viewModel.players[0].cards
+                            
+                        }
+                        
+                    }
+                }
+            }
+        }
+        }
     
-    //    func handleTurns(){
-    //        if playerTurn{
-    //
-    //        } else {
-    //            var request = viewModel.players[1].cards.randomElement()?.rank
-    //            viewModel.gotAny(from: 0, to: 1, rank: request)
-    //        }
-    //
-    //    }
-    func gameOver()->Bool{
+     func gameOver()->Bool{
         var gameDone = false
         if viewModel.players[0].cards.isEmpty || viewModel.deck.isEmpty || viewModel.players[1].cards.isEmpty {
             gameDone = true
@@ -440,6 +465,7 @@ struct GameView: View {
         }
         return gameDone
     }
+
     func chooseWinner()->String{
         var player: String = ""
         //user
@@ -468,55 +494,9 @@ struct GameView: View {
     }
 }
 
-//    func initializeHand(){
-//         for _ in 1...7{
-//            deck.shuffle()
-//            playerHand.append(deck.last ?? "")
-//            deck.removeLast()
-//            computerHand.append(deck.last ?? "")
-//            deck.removeLast()
-//        }
-//        for element in playerHand {
-//            print("\(element)")
-//        }
-//    }
-//initializes deck
-//      func deckInit(){
-//        let suitNum = 1...4
-//        let rankNum = 1...10
-//        for num in suitNum{
-//            for numbers in rankNum{
-//                deck.append("\(num)-\(numbers)")
-//            }
-//        }
-//        for element in deck {
-//            print("\(element)")
-//        }
-//    }
-//         func shuffleDeck(){
-//
-//        }
-//    struct CardView: View{
-//        let cardName: String
-//        var body: some View{
-//            Image(cardName)
-//                .resizable()
-//                .aspectRatio(2/3, contentMode: .fit)
-//
-//        }
-//    }
-
-
-//}
 #Preview{
     
     let game = GoFishGame()
     
     GameView(viewModel: game, continueGame:  true, chosenCard: "...", playerTurn: false)
-    //struct ContentView_Previews: PreviewProvider{
-    //    static var previews: some View{
-    //        let deck = Deck()
-    //
-    //        GameView(players: testData)
-    //    }
 }

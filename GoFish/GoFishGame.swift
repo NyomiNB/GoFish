@@ -59,11 +59,11 @@ class GoFishGame: ObservableObject {
        }
    }
     var selectedCards: [Card] = []
-
+ 
     var deck: [Card] = []
     init(){
         createDeck()
-        dealHands()
+        //dealHands()
     }
     func createDeck () {
         deck.removeAll()
@@ -74,30 +74,89 @@ class GoFishGame: ObservableObject {
          }
         deck.shuffle()
      }
-    func dealHands () {
-        for _ in 1...7{//computer
-            let card = drawCard()
-            players[0].cards.append(card)
-        }
-//        for _ in 1...7{//user
-//            let card = drawCard()
-//            players[0].cards.append(card)
+    func drawCard() -> Card{
+        return deck.popLast() ?? Card(rank: .One, suit: .One)
+    }
+//    func dealNextCard(){
+//        var dealingToStartPlayer = true
+//        var dealingIndex = 0
+//var isDealing = true
+//        guard dealingIndex < 7 else {
+//            isDealing = false
+//            return
 //        }
-        var testCards = [
-            Card (rank: .Four, suit: .One),
-            Card (rank: .Four, suit: .One),
-            Card (rank: .Four, suit: .One),
-            Card (rank: .Four, suit: .One),
-            Card (rank: .Two, suit: .One),
-            Card (rank: .Three, suit: .One),
-            Card (rank: .Four, suit: .Queen),
-            Card (rank: .Four, suit: .Four),
-            Card (rank: .One, suit: .Four),
-            Card (rank: .Four, suit: .Joker)
-        ]
+//        withAnimation(.easeInOut(duration: 0.3)){
+//            let playerIndex = dealingToStartPlayer ? 1 : 0
+//            let card = drawCard()
+//            players[playerIndex].cards.append(card)
+//        }
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2){
+//            dealingToStartPlayer = !dealingToStartPlayer
+//            if !dealingToStartPlayer{
+//                dealingIndex += 1
+//            }
+//            self.dealNextCard()
+//        }
+//        
+//    }
+    @Published var dealingToStartPlayer = true
+    @Published  var dealingIndex = 0
+    @Published var dealing = true
 
-        players[1].cards = testCards
+    func dealHands () {
  
+           guard dealingIndex < 7 else {
+               DispatchQueue.main.asyncAfter(deadline: .now() + 0.3){
+                   
+                   self.dealing = false
+               }
+            return
+        }
+        withAnimation(.easeInOut(duration: 0.3)){
+ 
+            let playerIndex = dealingToStartPlayer ? 1 : 0
+            let card = drawCard()
+            players[playerIndex].cards.append(card)
+            players[playerIndex].cards = players[playerIndex].cards
+            print(("animation"))
+ 
+            print((card))
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2){
+            print("first\(self.dealingToStartPlayer)")
+    self.dealingToStartPlayer.toggle()
+
+            if !self.dealingToStartPlayer{
+ 
+                self.dealingIndex  += 1
+                print(("dealinh in"))
+
+                print((self.dealingIndex))
+                 print(("player"))
+
+ 
+            }
+            print((self.dealingToStartPlayer))
+
+            self.dealHands()
+        }
+
+        
+//        var testCards = [
+//            Card (rank: .Four, suit: .One),
+//            Card (rank: .Four, suit: .One),
+//            Card (rank: .Four, suit: .One),
+//            Card (rank: .Four, suit: .One),
+//            Card (rank: .Two, suit: .One),
+//            Card (rank: .Three, suit: .One),
+//            Card (rank: .Four, suit: .Queen),
+//            Card (rank: .Four, suit: .Four),
+//            Card (rank: .One, suit: .Four),
+//            Card (rank: .Four, suit: .Joker)
+//        ]
+//        
+        // players[1].cards = testCards
+        
     }
     func playerDraws(playerIndex: Int){
         var card = drawCard()
@@ -133,7 +192,8 @@ class GoFishGame: ObservableObject {
         for (suit, count) in suitCount {
             if count == 4 {
                 results.append(suit.name)
-            }
+                removeCards(of: suit, of: players[0])
+             }
         }
        return results
     }
@@ -171,10 +231,7 @@ class GoFishGame: ObservableObject {
       }
         
 
-    func drawCard() -> Card{
-        return deck.popLast() ?? Card(rank: .One, suit: .One)
-    }
-    enum Rank: CaseIterable{
+     enum Rank: CaseIterable{
         case One, Two, Three, Four
     }
     enum Suit: CaseIterable{
