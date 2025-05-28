@@ -112,17 +112,18 @@ class GoFishGame: ObservableObject {
                }
             return
         }
-        withAnimation(.easeInOut(duration: 0.3)){
+        withAnimation(.easeInOut(duration: 0.7)){
  
             let playerIndex = dealingToStartPlayer ? 1 : 0
             let card = drawCard()
             players[playerIndex].cards.append(card)
+            SoundManager.instance.shuffleSound()
             players[playerIndex].cards = players[playerIndex].cards
             print(("animation"))
  
             print((card))
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2){
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5){
             print("first\(self.dealingToStartPlayer)")
     self.dealingToStartPlayer.toggle()
 
@@ -155,13 +156,15 @@ class GoFishGame: ObservableObject {
 //            Card (rank: .Four, suit: .Joker)
 //        ]
 //        
-        // players[1].cards = testCards
+//         players[1].cards = testCards
         
     }
     func playerDraws(playerIndex: Int){
-        var card = drawCard()
+        withAnimation(.easeInOut(duration: 0.3)){
+            
+            var card = drawCard()
             players[playerIndex].cards.append(card)
-        
+        }
     }
     func gotAny(from requestingIndex: Int, to targetIndex: Int, suit: Suit) -> (success: Bool, matching: Int) {
          let targetPlayer = players[targetIndex]
