@@ -19,7 +19,7 @@ Play against the computer in this cat-themed go fish game!
   * Allow user to chose how many players they want in the game if playing against a computer
   * Different game themes
 
-#Demo
+# Demo
 
 https://github.com/user-attachments/assets/809aef6f-b296-443a-ae9b-9bb3cc685466
 
